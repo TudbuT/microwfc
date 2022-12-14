@@ -1,6 +1,9 @@
 use std::fmt::Debug;
 
-use rand::{seq::IteratorRandom, Rng};
+use rand::{
+    seq::{IteratorRandom, SliceRandom},
+    Rng,
+};
 
 use crate::{
     grid::SizeErr, pixel::PixelChangeResult, Grid, ImplementedGrid, Pixel, PossibleValues,
@@ -30,20 +33,23 @@ impl<T: PossibleValues + Debug> Grid<Vec3i, Vec<Vec<Vec<Pixel<T>>>>> {
             }
             PixelChangeResult::Updated => {
                 self.data[x][y][z] = pixel;
+                let mut to_add = Vec::new();
                 for iz in 0..=(effect_distance * 2) {
                     for iy in 0..=(effect_distance * 2) {
                         for ix in 0..=(effect_distance * 2) {
                             let loc = (
-                                ix as i128 - effect_distance as i128 + x as i128,
-                                iy as i128 - effect_distance as i128 + y as i128,
-                                iz as i128 - effect_distance as i128 + y as i128,
+                                x as i128 - effect_distance as i128 + ix as i128,
+                                y as i128 - effect_distance as i128 + iy as i128,
+                                z as i128 - effect_distance as i128 + iz as i128,
                             );
                             if let Some(loc) = self.check_loc(loc) {
-                                to_update.push((loc, self.data[loc.0][loc.1][loc.2].clone()));
+                                to_add.push((loc, self.data[loc.0][loc.1][loc.2].clone()));
                             }
                         }
                     }
                 }
+                to_add.shuffle(rng);
+                to_update.append(&mut to_add);
             }
             PixelChangeResult::Unchanged => return result,
         }
@@ -55,7 +61,7 @@ impl<T: PossibleValues + Debug> ImplementedGrid<Vec3i, T, (i128, i128, i128)>
     for Grid<Vec3i, Vec<Vec<Vec<Pixel<T>>>>>
 {
     fn new(size: Vec3i) -> Result<Self, SizeErr> {
-        if size.0 == 0 || size.1 == 0 {
+        if size.0 == 0 || size.1 == 0 || size.2 == 0 {
             return Err(SizeErr::SizeMustNotBeZero);
         }
         Ok(Self {
@@ -193,7 +199,6 @@ impl<T: PossibleValues + Debug> ImplementedGrid<Vec3i, T, (i128, i128, i128)>
                 .filter(|x| x.1.possible_values.len() == min)
                 .choose(rng)
                 .unwrap()]; // SAFETY: This is safe because the list is known to be non-empty.
-            to_update = vec![to_update.remove(0)];
             let mut i = 0;
             while !to_update.is_empty() {
                 let item = to_update.remove(0);

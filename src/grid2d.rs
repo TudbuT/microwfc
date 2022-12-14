@@ -1,6 +1,9 @@
 use std::fmt::Debug;
 
-use rand::{seq::IteratorRandom, Rng};
+use rand::{
+    seq::{IteratorRandom, SliceRandom},
+    Rng,
+};
 
 use crate::{
     grid::SizeErr, pixel::PixelChangeResult, Grid, ImplementedGrid, Pixel, PossibleValues,
@@ -30,17 +33,20 @@ impl<T: PossibleValues + Debug> Grid<Vec2i, Vec<Vec<Pixel<T>>>> {
             }
             PixelChangeResult::Updated => {
                 self.data[x][y] = pixel;
+                let mut to_add = Vec::new();
                 for iy in 0..=(effect_distance * 2) {
                     for ix in 0..=(effect_distance * 2) {
                         let loc = (
-                            ix as i128 - effect_distance as i128 + x as i128,
-                            iy as i128 - effect_distance as i128 + y as i128,
+                            x as i128 - effect_distance as i128 + ix as i128,
+                            y as i128 - effect_distance as i128 + iy as i128,
                         );
                         if let Some(loc) = self.check_loc(loc) {
-                            to_update.push((loc, self.data[loc.0][loc.1].clone()));
+                            to_add.push((loc, self.data[loc.0][loc.1].clone()));
                         }
                     }
                 }
+                to_add.shuffle(rng);
+                to_update.append(&mut to_add);
             }
             PixelChangeResult::Unchanged => return result,
         }
@@ -162,7 +168,6 @@ impl<T: PossibleValues + Debug> ImplementedGrid<Vec2i, T, (i128, i128)>
                 .filter(|x| x.1.possible_values.len() == min)
                 .choose(rng)
                 .unwrap()]; // SAFETY: This is safe because the list is known to be non-empty.
-            to_update = vec![to_update.remove(0)];
             let mut i = 0;
             while !to_update.is_empty() {
                 let item = to_update.remove(0);

@@ -23,6 +23,8 @@ impl PossibleValues for Test {
             Self::Dirt,
             Self::Stone,
             Self::Stone,
+            Self::Grass,
+            Self::Grass,
             Self::Stone,
             Self::Stone,
         ]
@@ -32,7 +34,7 @@ impl PossibleValues for Test {
 fn main() {
     let mut rng = thread_rng();
     // Make a new 10-by-10 grid.
-    let mut grid: Grid<_, Vec<Vec<Pixel<Test>>>> = Grid::new((20, 20)).unwrap();
+    let mut grid: Grid<_, Vec<Vec<Pixel<Test>>>> = Grid::new((19, 19)).unwrap();
     if !grid.wfc(
         |g, loc, me| {
             // We use !any(|x| !...) to get none(|x| ...) functionality
@@ -67,7 +69,7 @@ fn main() {
                 "{}",
                 match grid.get_item((x, y)).determined_value.unwrap() {
                     Test::Stone => "##",
-                    Test::Dirt => "XX",
+                    Test::Dirt => "YY",
                     Test::Grass => "//",
                 }
             );
