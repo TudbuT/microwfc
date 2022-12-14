@@ -64,6 +64,7 @@ impl<T: Clone> Pixel<T> {
             return PixelChangeResult::Updated;
         }
         if let Some(rng) = randomize {
+            // SAFETY: The following is safe because the list is known to be non-empty.
             self.determined_value = Some(self.possible_values.choose(rng).unwrap().clone());
             self.possible_values = vec![self.determined_value.as_ref().unwrap().clone()];
             r = PixelChangeResult::Updated;

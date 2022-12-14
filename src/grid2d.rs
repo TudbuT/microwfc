@@ -1,6 +1,6 @@
 use std::fmt::Debug;
 
-use rand::Rng;
+use rand::{seq::IteratorRandom, Rng};
 
 use crate::{
     grid::SizeErr, pixel::PixelChangeResult, Grid, ImplementedGrid, Pixel, PossibleValues,
@@ -147,10 +147,21 @@ impl<T: PossibleValues + Debug> ImplementedGrid<Vec2i, T, (i128, i128)>
                 .into_iter()
                 .filter(|x| x.1.determined_value.is_none())
                 .collect::<Vec<_>>();
-            to_update.sort_by(|a, b| a.1.possible_values.len().cmp(&b.1.possible_values.len()));
             if to_update.is_empty() {
                 break;
             }
+            let min = to_update
+                .iter()
+                .min_by(|a, b| a.1.possible_values.len().cmp(&b.1.possible_values.len()))
+                .unwrap() // SAFETY: This is safe because the list is known to be non-empty.
+                .1
+                .possible_values
+                .len();
+            to_update = vec![to_update
+                .into_iter()
+                .filter(|x| x.1.possible_values.len() == min)
+                .choose(rng)
+                .unwrap()]; // SAFETY: This is safe because the list is known to be non-empty.
             to_update = vec![to_update.remove(0)];
             let mut i = 0;
             while !to_update.is_empty() {
