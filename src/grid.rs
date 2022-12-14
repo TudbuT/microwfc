@@ -48,7 +48,16 @@ pub trait ImplementedGrid<L, T: Clone, SL>: Sized {
     /// Performs the wave-function-collapse algorithm on the Grid.
     /// This returns if the algorithm was successful, and the state of the Grid is not guaranteed
     /// to be valid if it returns false, but there is never unsafety in reading from the Grid.
-    fn wfc<F, R>(&mut self, test: F, effect_distance: usize, rng: &mut R) -> Result<(), L>
+    ///
+    /// The chance parameter determines the likelyhood of a random collapse happening anywhere on the
+    /// grid. In some strict environments, this can cause unsolvable grids.
+    fn wfc<F, R>(
+        &mut self,
+        test: F,
+        effect_distance: usize,
+        rng: &mut R,
+        chance: f32,
+    ) -> Result<(), L>
     where
         F: Fn(&Self, L, &T) -> bool,
         R: Rng;

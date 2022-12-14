@@ -161,7 +161,13 @@ impl<T: PossibleValues + Debug> ImplementedGrid<Vec2i, T, (i128, i128)>
         Ok(())
     }
 
-    fn wfc<F, R>(&mut self, test: F, effect_distance: usize, rng: &mut R) -> Result<(), Vec2i>
+    fn wfc<F, R>(
+        &mut self,
+        test: F,
+        effect_distance: usize,
+        rng: &mut R,
+        chance: f32,
+    ) -> Result<(), Vec2i>
     where
         F: Fn(&Self, Vec2i, &T) -> bool,
         R: Rng,
@@ -196,7 +202,7 @@ impl<T: PossibleValues + Debug> ImplementedGrid<Vec2i, T, (i128, i128)>
                 .1
                 .possible_values
                 .len();
-            let to_update = if rng.gen::<f32>() < 0.01 {
+            let to_update = if rng.gen::<f32>() > chance {
                 to_update
                     .into_iter()
                     .filter(|x| x.1.possible_values.len() == min)
