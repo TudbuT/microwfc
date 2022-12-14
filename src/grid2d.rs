@@ -6,7 +6,7 @@ use crate::{
     grid::SizeErr, pixel::PixelChangeResult, Grid, ImplementedGrid, Pixel, PossibleValues,
 };
 
-type Vec2i = (usize, usize);
+pub type Vec2i = (usize, usize);
 
 impl<T: PossibleValues + Debug> Grid<Vec2i, Vec<Vec<Pixel<T>>>> {
     fn update<F: Fn(&Self, Vec2i, &T) -> bool>(

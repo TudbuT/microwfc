@@ -9,10 +9,13 @@ pub(crate) enum PixelChangeResult {
     Invalid,
 }
 
+/// This trait needs to be implemented for all types used in microwfc to allow microwfc to know the superposition.
+/// A value *can* be added multiple times.
 pub trait PossibleValues: Sized + Clone {
     fn get_possible_values() -> Vec<Self>;
 }
 
+/// This struct represents a n-dimensional "pixel".
 #[derive(Clone)]
 pub struct Pixel<T: Clone> {
     pub(crate) possible_values: Vec<T>,
