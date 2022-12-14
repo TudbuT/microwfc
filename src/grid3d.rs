@@ -33,21 +33,7 @@ impl<T: PossibleValues + Debug> Grid<Vec3i, Vec<Vec<Vec<Pixel<T>>>>> {
             }
             PixelChangeResult::Updated => {
                 self.data[x][y][z] = pixel;
-                let mut to_add = Vec::new();
-                for iz in 0..=(effect_distance * 2) {
-                    for iy in 0..=(effect_distance * 2) {
-                        for ix in 0..=(effect_distance * 2) {
-                            let loc = (
-                                x as i128 - effect_distance as i128 + ix as i128,
-                                y as i128 - effect_distance as i128 + iy as i128,
-                                z as i128 - effect_distance as i128 + iz as i128,
-                            );
-                            if let Some(loc) = self.check_loc(loc) {
-                                to_add.push((loc, self.data[loc.0][loc.1][loc.2].clone()));
-                            }
-                        }
-                    }
-                }
+                let mut to_add = self.neighbors((x, y, z), effect_distance);
                 to_add.shuffle(rng);
                 to_update.append(&mut to_add);
             }
@@ -89,7 +75,7 @@ impl<T: PossibleValues + Debug> ImplementedGrid<Vec3i, T, (i128, i128, i128)>
         if location.2 > 0 {
             v.push(self.get_item((location.0, location.1, location.2 - 1)));
         }
-        if location.2 < self.size.0 - 1 {
+        if location.2 < self.size.2 - 1 {
             v.push(self.get_item((location.0, location.1, location.2 + 1)));
         }
         if location.1 < self.size.1 - 1 {
@@ -101,28 +87,18 @@ impl<T: PossibleValues + Debug> ImplementedGrid<Vec3i, T, (i128, i128, i128)>
         v
     }
 
-    fn neighbors(&self, location: Vec3i) -> Vec<Pixel<T>> {
+    fn neighbors(&self, location: Vec3i, distance: usize) -> Vec<(Vec3i, Pixel<T>)> {
         let mut v = Vec::new();
-        for z in -1i128..=1 {
-            for y in -1i128..=1 {
-                for x in -1i128..=1 {
+        for z in 0..=(distance * 2) {
+            for y in 0..=(distance * 2) {
+                for x in 0..=(distance * 2) {
                     let location = (
-                        location.0 as i128 + x,
-                        location.1 as i128 + y,
-                        location.2 as i128 + z,
+                        location.0 as i128 + x as i128 - distance as i128,
+                        location.1 as i128 + y as i128 - distance as i128,
+                        location.2 as i128 + z as i128 - distance as i128,
                     );
-                    if location.0 < self.size.0 as i128
-                        && location.1 < self.size.1 as i128
-                        && location.2 < self.size.2 as i128
-                        && x >= 0
-                        && y >= 0
-                        && z >= 0
-                    {
-                        v.push(self.get_item((
-                            location.0 as usize,
-                            location.1 as usize,
-                            location.2 as usize,
-                        )));
+                    if let Some(location) = self.check_loc(location) {
+                        v.push((location, self.get_item(location)));
                     }
                 }
             }
@@ -148,45 +124,93 @@ impl<T: PossibleValues + Debug> ImplementedGrid<Vec3i, T, (i128, i128, i128)>
         }
     }
 
-    fn wfc<F, R>(&mut self, test: F, effect_distance: usize, rng: &mut R) -> bool
+    fn check_validity<F>(&mut self, test: F) -> Result<(), Vec3i>
+    where
+        F: Fn(&Self, Vec3i, &T) -> bool,
+    {
+        let mut data = self.data.clone();
+        for (z, zv) in data.iter_mut().enumerate() {
+            for (y, yv) in zv.iter_mut().enumerate() {
+                for (x, pixel) in yv.iter_mut().enumerate() {
+                    if pixel.determined_value.is_some() {
+                        continue;
+                    }
+                    if let PixelChangeResult::Invalid = pixel.recalc(
+                        self,
+                        (x, y, z),
+                        &test,
+                        None::<&mut rand::rngs::mock::StepRng>,
+                    ) {
+                        return Err((x, y, z));
+                    }
+                }
+            }
+        }
+        self.data = data;
+        Ok(())
+    }
+
+    fn collapse<F, R>(
+        &mut self,
+        test: F,
+        effect_distance: usize,
+        rng: &mut R,
+        item: (Vec3i, Pixel<T>),
+    ) -> Result<(), Vec3i>
     where
         F: Fn(&Self, Vec3i, &T) -> bool,
         R: Rng,
     {
-        {
-            let mut data = self.data.clone();
-            for (x, xv) in data.iter_mut().enumerate() {
-                for (y, yv) in xv.iter_mut().enumerate() {
-                    for (z, pixel) in yv.iter_mut().enumerate() {
-                        if let PixelChangeResult::Invalid =
-                            pixel.recalc(self, (x, y, z), &test, None::<&mut R>)
-                        {
-                            return false;
-                        }
-                    }
-                }
+        let mut to_update = vec![item];
+        let mut i = 0;
+        while !to_update.is_empty() {
+            let item = to_update.remove(0);
+            let r = self.update(
+                &mut to_update,
+                (item.0, item.1),
+                &test,
+                effect_distance,
+                rng,
+                i == 0,
+            );
+            if r == PixelChangeResult::Invalid {
+                return Err(item.0);
             }
-            self.data = data;
+            i += 1;
         }
+        Ok(())
+    }
+
+    fn wfc<F, R>(&mut self, test: F, effect_distance: usize, rng: &mut R) -> Result<(), Vec3i>
+    where
+        F: Fn(&Self, Vec3i, &T) -> bool,
+        R: Rng,
+    {
+        self.check_validity(&test)?;
         loop {
-            let mut done = true;
             let backup = self.data.clone();
 
-            let mut updatable = Vec::new();
-            for (x, xv) in self.data.iter().enumerate() {
-                for (y, yv) in xv.iter().enumerate() {
-                    for (z, pixel) in yv.iter().enumerate() {
-                        updatable.push(((x, y, z), pixel.clone()));
-                    }
-                }
-            }
-            let mut to_update = updatable
-                .into_iter()
-                .filter(|x| x.1.determined_value.is_none())
-                .collect::<Vec<_>>();
+            // Get all items that haven't been determined yet
+            let to_update: Vec<_> = self
+                .data
+                .iter()
+                .enumerate()
+                .flat_map(|(x, v)| {
+                    v.iter().enumerate().flat_map(move |(y, v)| {
+                        v.iter()
+                            .enumerate()
+                            .filter(|(_, pixel)| pixel.determined_value.is_none())
+                            .map(move |(z, pixel)| ((x, y, z), pixel.clone()))
+                    })
+                })
+                .collect();
+
             if to_update.is_empty() {
+                // We're done
                 break;
             }
+
+            // Get a random pixel with minimal entropy and collapse it
             let min = to_update
                 .iter()
                 .min_by(|a, b| a.1.possible_values.len().cmp(&b.1.possible_values.len()))
@@ -194,31 +218,24 @@ impl<T: PossibleValues + Debug> ImplementedGrid<Vec3i, T, (i128, i128, i128)>
                 .1
                 .possible_values
                 .len();
-            to_update = vec![to_update
-                .into_iter()
-                .filter(|x| x.1.possible_values.len() == min)
-                .choose(rng)
-                .unwrap()]; // SAFETY: This is safe because the list is known to be non-empty.
-            let mut i = 0;
-            while !to_update.is_empty() {
-                let item = to_update.remove(0);
-                let r = self.update(&mut to_update, item, &test, effect_distance, rng, i == 0);
-                match r {
-                    PixelChangeResult::Unchanged => (),
-                    PixelChangeResult::Updated => done = false,
-                    PixelChangeResult::Invalid => {
-                        done = false;
-                        self.data = backup;
-                        break;
-                    }
-                }
-                i += 1;
-            }
+            let to_update = if rng.gen::<f32>() < 0.01 {
+                to_update
+                    .into_iter()
+                    .filter(|x| x.1.possible_values.len() == min)
+                    .choose(rng)
+                    .unwrap() // SAFETY: This is safe because the list is known to be non-empty.
+            } else {
+                to_update.into_iter().choose(rng).unwrap() // SAFETY: This is safe because the list is known to be non-empty.
+            };
 
-            if done {
-                break;
+            // Now collapse the Pixel
+            if self
+                .collapse(&test, effect_distance, rng, to_update)
+                .is_err()
+            {
+                self.data = backup;
             }
         }
-        true
+        Ok(())
     }
 }

@@ -32,6 +32,13 @@ impl<T: PossibleValues> Default for Pixel<T> {
 }
 
 impl<T: Clone> Pixel<T> {
+    pub fn new(item: T) -> Pixel<T> {
+        Pixel {
+            possible_values: vec![item.clone()],
+            determined_value: Some(item),
+        }
+    }
+
     pub(crate) fn recalc<L, SL, G, F>(
         &mut self,
         grid: &G,

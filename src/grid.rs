@@ -22,15 +22,33 @@ pub trait ImplementedGrid<L, T: Clone, SL>: Sized {
     fn unidirectional_neighbors(&self, location: L) -> Vec<Pixel<T>>;
     /// Returns all neighbord, including ones touching only at a single point.
     /// This does return corners.
-    fn neighbors(&self, location: L) -> Vec<Pixel<T>>;
+    fn neighbors(&self, location: L, distance: usize) -> Vec<(L, Pixel<T>)>;
 
     /// Checks if a location is inside the Grid, then returns its Grid coordinates.
     fn check_loc(&self, location: SL) -> Option<L>;
 
+    /// Checks if the Grid is valid
+    fn check_validity<F>(&mut self, test: F) -> Result<(), L>
+    where
+        F: Fn(&Self, L, &T) -> bool;
+
+    /// Collapses a single Pixel and updates neighbors. This will return false if the Grid is invalid.
+    /// Please note that this function is not very useful, and you should use wfc instead
+    fn collapse<F, R>(
+        &mut self,
+        test: F,
+        effect_distance: usize,
+        rng: &mut R,
+        data: (L, Pixel<T>),
+    ) -> Result<(), L>
+    where
+        F: Fn(&Self, L, &T) -> bool,
+        R: Rng;
+
     /// Performs the wave-function-collapse algorithm on the Grid.
     /// This returns if the algorithm was successful, and the state of the Grid is not guaranteed
     /// to be valid if it returns false, but there is never unsafety in reading from the Grid.
-    fn wfc<F, R>(&mut self, test: F, effect_distance: usize, rng: &mut R) -> bool
+    fn wfc<F, R>(&mut self, test: F, effect_distance: usize, rng: &mut R) -> Result<(), L>
     where
         F: Fn(&Self, L, &T) -> bool,
         R: Rng;
