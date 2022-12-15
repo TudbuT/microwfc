@@ -11,7 +11,7 @@ pub(crate) enum PixelChangeResult {
 
 /// This trait needs to be implemented for all types used in microwfc to allow microwfc to know the superposition.
 /// A value *can* be added multiple times.
-pub trait PossibleValues: Sized + Clone {
+pub trait PossibleValues: Sized + Clone + Eq {
     fn get_possible_values() -> Vec<Self>;
 }
 
@@ -39,18 +39,16 @@ impl<T: Clone> Pixel<T> {
         }
     }
 
-    pub(crate) fn recalc<L, SL, G, F>(
+    pub(crate) fn recalc<const D: usize, G, F>(
         &mut self,
         grid: &G,
-        location: L,
+        location: [usize; D],
         test: F,
         randomize: Option<&mut impl Rng>,
     ) -> PixelChangeResult
     where
-        L: Copy,
-        SL: Copy,
-        G: ImplementedGrid<L, T, SL>,
-        F: Fn(&G, L, &T) -> bool,
+        G: ImplementedGrid<T, D>,
+        F: Fn(&G, [usize; D], &T) -> bool,
     {
         let mut r = PixelChangeResult::Unchanged;
         let len = self.possible_values.len();

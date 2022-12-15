@@ -1,5 +1,6 @@
 mod grid;
 mod pixel;
+mod unique;
 
 // default implementations
 mod grid2d;
@@ -10,3 +11,5 @@ pub use grid::ImplementedGrid;
 
 pub use pixel::Pixel;
 pub use pixel::PossibleValues;
+
+pub use unique::Unique;

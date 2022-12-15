@@ -1,12 +1,13 @@
 [package]
 name = "microwfc"
-version = "0.2.1"
+version = "0.3.0"
 edition = "2021"
 repository = "https://github.com/tudbut/microwfc"
-license = "GPL-3.0"
+license = "MIT"
 description = "Small Wave-Function-Collapse implementation"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
 rand = "0.8"
+micro_ndarray = "0.2"
