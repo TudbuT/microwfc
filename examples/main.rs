@@ -61,6 +61,7 @@ fn main() {
             |grid| {
                 let mut s = String::new();
                 for y in 0..grid.size()[0] {
+                    s += "\n";
                     for x in 0..grid.size()[1] {
                         if let Some(x) = grid.get_item([x, y]).determined_value {
                             s += match x {
@@ -72,7 +73,6 @@ fn main() {
                             s += "  ";
                         }
                     }
-                    s += "\n";
                 }
                 println!("{}", s);
                 thread::sleep(Duration::from_millis(10));
