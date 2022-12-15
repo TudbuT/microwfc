@@ -59,24 +59,22 @@ fn main() {
             &mut rng,
             0.05,
             |grid| {
-                println!("---");
+                let mut s = String::new();
                 for y in 0..grid.size()[0] {
                     for x in 0..grid.size()[1] {
                         if let Some(x) = grid.get_item([x, y]).determined_value {
-                            print!(
-                                "{}",
-                                match x {
-                                    Test::Stone => "##",
-                                    Test::Dirt => "YY",
-                                    Test::Grass => "//",
-                                }
-                            );
+                            s += match x {
+                                Test::Stone => "##",
+                                Test::Dirt => "YY",
+                                Test::Grass => "//",
+                            };
                         } else {
-                            print!("  ");
+                            s += "  ";
                         }
                     }
-                    println!();
+                    s += "\n";
                 }
+                println!("{}", s);
                 thread::sleep(Duration::from_millis(10));
             },
         );
