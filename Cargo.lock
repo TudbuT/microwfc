@@ -27,9 +27,9 @@ checksum = "db6d7e329c562c5dfab7a46a2afabc8b987ab9a4834c9d1ca04dc54c1546cef8"
 
 [[package]]
 name = "micro_ndarray"
-version = "0.2.0"
+version = "0.2.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "93c5a6ba96c83dd85a481c44bf2ac9c329e89b8365a7bc3229b0596aa7afa6eb"
+checksum = "156fc9f2e0a7819610eb731ba1d41c6d0ddaada738a9569728dac8b08f095e58"
 
 [[package]]
 name = "microwfc"
