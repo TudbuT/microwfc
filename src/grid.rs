@@ -64,7 +64,7 @@ impl<T: PossibleValues, const D: usize> Grid<T, D> {
             })
             .collect()
     }
-    /// Returns all neighbord, including ones touching only at a single point.
+    /// Returns all neighbors, including ones touching only at a single point.
     /// This does return corners.
     pub fn neighbors(&self, location: [usize; D], distance: usize) -> Vec<([usize; D], Pixel<T>)> {
         let mut r = Vec::new();

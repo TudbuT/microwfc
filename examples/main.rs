@@ -12,19 +12,8 @@ enum Test {
 }
 
 impl PossibleValues for Test {
-    fn get_possible_values() -> Vec<Self> {
-        vec![
-            // We add some values more to increase their probability, and we add dirt much less to decrease
-            // probability of a jump to stone. This means we will get large-ish areas of grass and stone, with dirt borders.
-            Self::Grass,
-            Self::Grass,
-            Self::Grass,
-            Self::Grass,
-            Self::Dirt,
-            Self::Stone,
-            Self::Stone,
-            Self::Stone,
-        ]
+    fn get_possible_values() -> Vec<(Self, f32)> {
+        vec![(Self::Grass, 4f32), (Self::Dirt, 1f32), (Self::Stone, 3f32)]
     }
 }
 
