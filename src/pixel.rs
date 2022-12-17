@@ -1,6 +1,8 @@
+use std::fmt::Debug;
+
 use rand::{seq::SliceRandom, Rng};
 
-use super::grid::ImplementedGrid;
+use crate::Grid;
 
 #[derive(Clone, PartialEq, Debug)]
 pub(crate) enum PixelChangeResult {
@@ -31,7 +33,7 @@ impl<T: PossibleValues> Default for Pixel<T> {
     }
 }
 
-impl<T: Clone> Pixel<T> {
+impl<T: PossibleValues> Pixel<T> {
     pub fn new(item: T) -> Pixel<T> {
         Pixel {
             possible_values: vec![item.clone()],
@@ -39,16 +41,15 @@ impl<T: Clone> Pixel<T> {
         }
     }
 
-    pub(crate) fn recalc<const D: usize, G, F>(
+    pub(crate) fn recalc<const D: usize, F>(
         &mut self,
-        grid: &G,
+        grid: &Grid<T, D>,
         location: [usize; D],
         test: F,
         randomize: Option<&mut impl Rng>,
     ) -> PixelChangeResult
     where
-        G: ImplementedGrid<T, D>,
-        F: Fn(&G, [usize; D], &T) -> bool,
+        F: Fn(&Grid<T, D>, [usize; D], &T) -> bool,
     {
         let mut r = PixelChangeResult::Unchanged;
         let len = self.possible_values.len();

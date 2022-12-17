@@ -1,6 +1,6 @@
 [package]
 name = "microwfc"
-version = "0.3.1"
+version = "0.4.0"
 edition = "2021"
 repository = "https://github.com/tudbut/microwfc"
 license = "MIT"

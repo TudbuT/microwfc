@@ -14,32 +14,13 @@ pub enum SizeErr {
     SizeMustNotBeZero,
 }
 
-/// Trait representing an implemented Grid, which is implemented for 2D and 3D grids by default.
-pub trait ImplementedGrid<T: Clone, const D: usize>: Sized {
-    /// Returns unidirectional neighbors, meaning only neighbord with one common face.
-    /// This means the corners will not be returned.
-    fn unidirectional_neighbors(&self, location: [usize; D]) -> Vec<Pixel<T>>;
-    /// Returns all neighbord, including ones touching only at a single point.
-    /// This does return corners.
-    fn neighbors(&self, location: [usize; D], distance: usize) -> Vec<([usize; D], Pixel<T>)>;
-}
-
-/// A microwfc grid, which can exist in all dimensions, but is only implemented for 2D and 3D.
+/// A microwfc grid.
 pub struct Grid<T: PossibleValues, const D: usize> {
     pub(crate) size: [usize; D],
     pub(crate) data: Array<Pixel<T>, D>,
 }
 
-impl<T: PossibleValues, const D: usize> Grid<T, D>
-where
-    Self: ImplementedGrid<T, D>,
-{
-    /// Returns the n-dimensional size of the Grid.
-    /// In all default implementations, this returns a n-tuple where n is the dimensionality of the Grid.
-    pub fn size(&self) -> [usize; D] {
-        self.size
-    }
-
+impl<T: PossibleValues, const D: usize> Grid<T, D> {
     /// Constructs a new Grid using the n-dimensional size.
     pub fn new(size: [usize; D]) -> Result<Self, SizeErr> {
         if size.iter().any(|x| *x == 0) {
@@ -51,6 +32,12 @@ where
         })
     }
 
+    /// Returns the n-dimensional size of the Grid.
+    /// In all default implementations, this returns a n-tuple where n is the dimensionality of the Grid.
+    pub fn size(&self) -> [usize; D] {
+        self.size
+    }
+
     /// Clones and returns a Pixel from the Grid.
     pub fn get_item(&self, location: [usize; D]) -> Pixel<T> {
         self.data[location].clone()
@@ -59,6 +46,51 @@ where
     /// Sets a Pixel in the Grid.
     pub fn set_item(&mut self, location: [usize; D], item: Pixel<T>) {
         self.data[location] = item;
+    }
+
+    /// Returns unidirectional neighbors, meaning only neighbord with one common face.
+    /// This means the corners will not be returned.
+    pub fn unidirectional_neighbors(&self, location: [usize; D]) -> Vec<([usize; D], Pixel<T>)> {
+        self.neighbors(location, 1)
+            .into_iter()
+            .filter(|neighbor| {
+                neighbor
+                    .0
+                    .iter()
+                    .enumerate()
+                    .filter(|(i, x)| location[*i] - **x != 0)
+                    .count()
+                    == 1
+            })
+            .collect()
+    }
+    /// Returns all neighbord, including ones touching only at a single point.
+    /// This does return corners.
+    pub fn neighbors(&self, location: [usize; D], distance: usize) -> Vec<([usize; D], Pixel<T>)> {
+        let mut r = Vec::new();
+        let start_location: [usize; D] = location
+            .into_iter()
+            .map(|x| if x < distance { x } else { x - distance })
+            .collect::<Vec<_>>()
+            .try_into()
+            .unwrap();
+        let mut loc = start_location;
+        loop {
+            r.push((loc, self.get_item(loc)));
+            for n in 0..D {
+                loc[n] += 1;
+                if loc[n] > location[n] + distance || loc[n] == self.size[n] {
+                    loc[n] = start_location[n];
+                } else {
+                    break;
+                }
+            }
+            if loc == start_location {
+                // will reset to [0; D] when end is reached, but will NOT reach that before as it is incremented first
+                break;
+            }
+        }
+        r
     }
 
     /// Checks if a location is inside the Grid, then returns its Grid coordinates.
@@ -140,7 +172,7 @@ where
             let item = to_update.remove(0);
             let r = self.update(
                 &mut to_update,
-                (item.0, item.1),
+                (item.0, item.1.clone()),
                 &test,
                 effect_distance,
                 rng,
@@ -212,12 +244,15 @@ where
                     .unwrap() // SAFETY: This is safe because the list is known to be non-empty.
             };
 
+            let loc = to_update.0;
+
             // Now collapse the Pixel
             if self
                 .collapse(&test, effect_distance, rng, to_update)
                 .is_err()
             {
                 self.data = backup;
+                self.data[loc] = Pixel::default();
             }
 
             on_update(self);

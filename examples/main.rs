@@ -39,7 +39,7 @@ fn main() {
                 match *me {
                     // Disallow stone next to grass
                     Test::Stone => !g.unidirectional_neighbors(loc).iter().any(|x| {
-                        x.determined_value
+                        x.1.determined_value
                             .as_ref()
                             .map(|x| *x == Test::Grass)
                             .unwrap_or(false) // Allow unsolved pixels
@@ -48,7 +48,7 @@ fn main() {
                     Test::Dirt => true,
                     // Disallow grass next to stone
                     Test::Grass => !g.unidirectional_neighbors(loc).iter().any(|x| {
-                        x.determined_value
+                        x.1.determined_value
                             .as_ref()
                             .map(|x| *x == Test::Stone)
                             .unwrap_or(false)
