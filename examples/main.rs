@@ -23,25 +23,31 @@ fn main() {
     let mut grid: Grid<Test, 2> = Grid::new([30, 30]).unwrap();
     loop {
         let r = grid.wfc(
-            |g, loc, me| {
+            |g, loc, me, probability| {
                 // We use !any(|x| ...) to get none(|x| ...) functionality
                 match *me {
                     // Disallow stone next to grass
-                    Test::Stone => !g.unidirectional_neighbors(loc).iter().any(|x| {
-                        x.1.determined_value
-                            .as_ref()
-                            .map(|x| *x == Test::Grass)
-                            .unwrap_or(false) // Allow unsolved pixels
-                    }),
+                    Test::Stone => (
+                        !g.unidirectional_neighbors(loc).iter().any(|x| {
+                            x.1.determined_value
+                                .as_ref()
+                                .map(|x| *x == Test::Grass)
+                                .unwrap_or(false) // Allow unsolved pixels
+                        }),
+                        probability,
+                    ),
                     // Dirt is always allowed
-                    Test::Dirt => true,
+                    Test::Dirt => (true, probability),
                     // Disallow grass next to stone
-                    Test::Grass => !g.unidirectional_neighbors(loc).iter().any(|x| {
-                        x.1.determined_value
-                            .as_ref()
-                            .map(|x| *x == Test::Stone)
-                            .unwrap_or(false)
-                    }),
+                    Test::Grass => (
+                        !g.unidirectional_neighbors(loc).iter().any(|x| {
+                            x.1.determined_value
+                                .as_ref()
+                                .map(|x| *x == Test::Stone)
+                                .unwrap_or(false)
+                        }),
+                        probability,
+                    ),
                 }
             },
             1,

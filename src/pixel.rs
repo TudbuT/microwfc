@@ -49,14 +49,17 @@ impl<T: PossibleValues> Pixel<T> {
         randomize: Option<&mut impl Rng>,
     ) -> PixelChangeResult
     where
-        F: Fn(&Grid<T, D>, [usize; D], &T) -> bool,
+        F: Fn(&Grid<T, D>, [usize; D], &T, f32) -> (bool, f32),
     {
         let mut r = PixelChangeResult::Unchanged;
         let len = self.possible_values.len();
         for (i, val) in self.possible_values.clone().iter().rev().enumerate() {
-            if !test(grid, location, &val.0) {
+            let (ok, probability) = test(grid, location, &val.0, val.1);
+            if !ok {
                 self.possible_values.remove(len - i - 1);
                 r = PixelChangeResult::Updated;
+            } else {
+                self.possible_values[len - i - 1].1 = probability;
             }
         }
         if self.possible_values.is_empty() {

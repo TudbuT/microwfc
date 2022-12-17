@@ -106,7 +106,7 @@ impl<T: PossibleValues, const D: usize> Grid<T, D> {
     /// Checks if the Grid is valid
     pub fn check_validity<F>(&mut self, test: F) -> Result<(), [usize; D]>
     where
-        F: Fn(&Self, [usize; D], &T) -> bool,
+        F: Fn(&Grid<T, D>, [usize; D], &T, f32) -> (bool, f32),
     {
         let mut data = self.data.clone();
         for (loc, pixel) in data.iter_mut() {
@@ -123,7 +123,7 @@ impl<T: PossibleValues, const D: usize> Grid<T, D> {
         Ok(())
     }
 
-    fn update<F: Fn(&Self, [usize; D], &T) -> bool>(
+    fn update<F>(
         &mut self,
         to_update: &mut Vec<([usize; D], Pixel<T>)>,
         (location, mut pixel): ([usize; D], Pixel<T>),
@@ -131,7 +131,10 @@ impl<T: PossibleValues, const D: usize> Grid<T, D> {
         effect_distance: usize,
         rng: &mut impl Rng,
         should_collapse: bool,
-    ) -> PixelChangeResult {
+    ) -> PixelChangeResult
+    where
+        F: Fn(&Grid<T, D>, [usize; D], &T, f32) -> (bool, f32),
+    {
         let result = pixel.recalc(
             self,
             location,
@@ -163,7 +166,7 @@ impl<T: PossibleValues, const D: usize> Grid<T, D> {
         item: ([usize; D], Pixel<T>),
     ) -> Result<(), [usize; D]>
     where
-        F: Fn(&Self, [usize; D], &T) -> bool,
+        F: Fn(&Grid<T, D>, [usize; D], &T, f32) -> (bool, f32),
         R: Rng,
     {
         let mut to_update = vec![item];
@@ -201,7 +204,7 @@ impl<T: PossibleValues, const D: usize> Grid<T, D> {
         on_update: impl Fn(&Self),
     ) -> Result<(), [usize; D]>
     where
-        F: Fn(&Self, [usize; D], &T) -> bool,
+        F: Fn(&Grid<T, D>, [usize; D], &T, f32) -> (bool, f32),
         R: Rng,
     {
         self.check_validity(&test)?;
