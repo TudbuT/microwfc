@@ -5,45 +5,55 @@ use microwfc::*;
 use rand::thread_rng;
 
 #[derive(Clone, PartialEq, Eq, Debug)]
-enum Test {
-    Stone,
+enum Tile {
+    Water,
     Dirt,
     Grass,
 }
 
-impl PossibleValues for Test {
+impl Tile {
+    fn to_char(&self) -> char {
+        match self {
+            Tile::Dirt => '🟫',
+            Tile::Grass => '🟩',
+            Tile::Water => '🟦',
+        }
+    }
+}
+
+impl PossibleValues for Tile {
     fn get_possible_values() -> Vec<(Self, f32)> {
-        vec![(Self::Grass, 4f32), (Self::Dirt, 1f32), (Self::Stone, 3f32)]
+        vec![(Self::Grass, 4f32), (Self::Dirt, 1f32), (Self::Water, 3f32)]
     }
 }
 
 fn main() {
     let mut rng = thread_rng();
     // Make a new 30-by-30 grid.
-    let mut grid: Grid<Test, 2> = Grid::new([30, 30]).unwrap();
+    let mut grid: Grid<Tile, 2> = Grid::new([30, 30]).unwrap();
     loop {
         let r = grid.wfc(
             |g, loc, me, probability| {
                 // We use !any(|x| ...) to get none(|x| ...) functionality
                 match *me {
                     // Disallow stone next to grass
-                    Test::Stone => (
+                    Tile::Water => (
                         !g.unidirectional_neighbors(loc).iter().any(|x| {
                             x.1.determined_value
                                 .as_ref()
-                                .map(|x| *x == Test::Grass)
+                                .map(|x| *x == Tile::Grass)
                                 .unwrap_or(false) // Allow unsolved pixels
                         }),
                         probability,
                     ),
                     // Dirt is always allowed
-                    Test::Dirt => (true, probability),
+                    Tile::Dirt => (true, probability),
                     // Disallow grass next to stone
-                    Test::Grass => (
+                    Tile::Grass => (
                         !g.unidirectional_neighbors(loc).iter().any(|x| {
                             x.1.determined_value
                                 .as_ref()
-                                .map(|x| *x == Test::Stone)
+                                .map(|x| *x == Tile::Water)
                                 .unwrap_or(false)
                         }),
                         probability,
@@ -59,11 +69,7 @@ fn main() {
                     s += "\n";
                     for x in 0..grid.size()[1] {
                         if let Some(x) = grid.get_item([x, y]).determined_value {
-                            s += match x {
-                                Test::Stone => "##",
-                                Test::Dirt => "YY",
-                                Test::Grass => "//",
-                            };
+                            s += x.to_char().to_string().as_str();
                         } else {
                             s += "  ";
                         }
