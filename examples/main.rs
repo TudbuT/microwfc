@@ -36,7 +36,7 @@ fn main() {
             |g, loc, me, probability| {
                 // We use !any(|x| ...) to get none(|x| ...) functionality
                 match *me {
-                    // Disallow stone next to grass
+                    // Disallow water next to grass
                     Tile::Water => (
                         !g.unidirectional_neighbors(loc).iter().any(|x| {
                             x.1.determined_value
@@ -48,7 +48,7 @@ fn main() {
                     ),
                     // Dirt is always allowed
                     Tile::Dirt => (true, probability),
-                    // Disallow grass next to stone
+                    // Disallow grass next to water
                     Tile::Grass => (
                         !g.unidirectional_neighbors(loc).iter().any(|x| {
                             x.1.determined_value
