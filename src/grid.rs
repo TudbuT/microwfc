@@ -58,7 +58,7 @@ impl<T: PossibleValues, const D: usize> Grid<T, D> {
                     .0
                     .iter()
                     .enumerate()
-                    .filter(|(i, x)| location[*i].checked_sub(**x).is_some())
+                    .filter(|(i, x)| location[*i].overflowing_sub(**x).0 != 0)
                     .count()
                     == 1
             })
