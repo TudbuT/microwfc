@@ -11,12 +11,12 @@ enum Tile {
     Grass,
 }
 
-impl Tile {
-    fn to_char(&self) -> char {
-        match self {
-            Tile::Dirt => '🟫',
-            Tile::Grass => '🟩',
-            Tile::Water => '🟦',
+impl From<Tile> for String {
+    fn from(val: Tile) -> Self {
+        match val {
+            Tile::Dirt => "\x1b[1;30m█\x1b[0m".to_string(),
+            Tile::Grass => "\x1b[1;32m█\x1b[0m".to_string(),
+            Tile::Water => "\x1b[1;34m█\x1b[0m".to_string(),
         }
     }
 }
@@ -69,12 +69,14 @@ fn main() {
                     s += "\n";
                     for x in 0..grid.size()[1] {
                         if let Some(x) = grid.get_item([x, y]).determined_value {
-                            s += x.to_char().to_string().as_str();
+                            s += &String::from(x);
                         } else {
-                            s += "  ";
+                            s += " ";
                         }
                     }
                 }
+                // Clear the screen
+                print!("\x1b[2J\x1b[1;1H");
                 println!("{}", s);
                 thread::sleep(Duration::from_millis(10));
             },
