@@ -13,10 +13,12 @@ enum Tile {
 
 impl From<Tile> for String {
     fn from(val: Tile) -> Self {
+        // See ANSI escape codes for 8-bit colors:
+        // https://en.wikipedia.org/wiki/ANSI_escape_sequence#8-bit
         match val {
-            Tile::Dirt => "\x1b[1;30m██\x1b[0m".to_string(),
-            Tile::Grass => "\x1b[1;32m██\x1b[0m".to_string(),
-            Tile::Water => "\x1b[1;34m██\x1b[0m".to_string(),
+            Tile::Water => "\x1b[1;34m██".to_string(),
+            Tile::Dirt => "\x1b[38;2;200;150;100m██".to_string(),
+            Tile::Grass => "\x1b[1;32m██".to_string(),
         }
     }
 }
@@ -32,9 +34,6 @@ fn main() {
     // Make a new 30-by-30 grid.
     let mut grid: Grid<Tile, 2> = Grid::new([30, 30]).unwrap();
     loop {
-        // Clear the screen
-        print!("\x1b[2J");
-
         let r = grid.wfc(
             |g, loc, me, probability| {
                 // We use !any(|x| ...) to get none(|x| ...) functionality
@@ -67,6 +66,9 @@ fn main() {
             &mut rng,
             0.05,
             |grid| {
+                // Clear the screen
+                println!("\x1b[H\x1b[2J\x1b[3J");
+
                 let mut s = String::new();
                 for y in 0..grid.size()[0] {
                     s += "\n";
