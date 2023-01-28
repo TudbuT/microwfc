@@ -58,7 +58,7 @@ impl<T: PossibleValues, const D: usize> Grid<T, D> {
                     .0
                     .iter()
                     .enumerate()
-                    .filter(|(i, x)| location[*i] - **x != 0)
+                    .filter(|(i, x)| location[*i].overflowing_sub(**x).0 != 0)
                     .count()
                     == 1
             })
@@ -76,7 +76,9 @@ impl<T: PossibleValues, const D: usize> Grid<T, D> {
             .unwrap();
         let mut loc = start_location;
         loop {
-            r.push((loc, self.get_item(loc)));
+            if loc != location {
+                r.push((loc, self.get_item(loc)));
+            }
             for n in 0..D {
                 loc[n] += 1;
                 if loc[n] > location[n] + distance || loc[n] == self.size[n] {
