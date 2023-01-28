@@ -32,6 +32,9 @@ fn main() {
     // Make a new 30-by-30 grid.
     let mut grid: Grid<Tile, 2> = Grid::new([30, 30]).unwrap();
     loop {
+        // Clear the screen
+        print!("\x1b[2J");
+
         let r = grid.wfc(
             |g, loc, me, probability| {
                 // We use !any(|x| ...) to get none(|x| ...) functionality
@@ -75,8 +78,6 @@ fn main() {
                         }
                     }
                 }
-                // Clear the screen
-                print!("\x1b[2J\x1b[1;1H");
 
                 println!("{}", s);
                 thread::sleep(Duration::from_millis(10));
