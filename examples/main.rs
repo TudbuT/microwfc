@@ -14,9 +14,9 @@ enum Tile {
 impl From<Tile> for String {
     fn from(val: Tile) -> Self {
         match val {
-            Tile::Dirt => "\x1b[1;30m█\x1b[0m".to_string(),
-            Tile::Grass => "\x1b[1;32m█\x1b[0m".to_string(),
-            Tile::Water => "\x1b[1;34m█\x1b[0m".to_string(),
+            Tile::Dirt => "\x1b[1;30m██\x1b[0m".to_string(),
+            Tile::Grass => "\x1b[1;32m██\x1b[0m".to_string(),
+            Tile::Water => "\x1b[1;34m██\x1b[0m".to_string(),
         }
     }
 }
@@ -71,12 +71,13 @@ fn main() {
                         if let Some(x) = grid.get_item([x, y]).determined_value {
                             s += &String::from(x);
                         } else {
-                            s += " ";
+                            s += "  ";
                         }
                     }
                 }
                 // Clear the screen
                 print!("\x1b[2J\x1b[1;1H");
+
                 println!("{}", s);
                 thread::sleep(Duration::from_millis(10));
             },
