@@ -17,7 +17,7 @@ impl From<Tile> for String {
         // https://en.wikipedia.org/wiki/ANSI_escape_sequence#8-bit
         match val {
             Tile::Water => "\x1b[1;34m██".to_string(),
-            Tile::Dirt => "\x1b[38;2;200;150;100m██".to_string(),
+            Tile::Dirt => "\x1b[1;33m██".to_string(),
             Tile::Grass => "\x1b[1;32m██".to_string(),
         }
     }
