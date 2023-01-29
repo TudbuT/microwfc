@@ -16,9 +16,9 @@ impl From<Tile> for String {
         // See ANSI escape codes for 8-bit colors:
         // https://en.wikipedia.org/wiki/ANSI_escape_sequence#8-bit
         match val {
-            Tile::Water => "\x1b[1;34m██".to_string(),
-            Tile::Dirt => "\x1b[1;33m██".to_string(),
-            Tile::Grass => "\x1b[1;32m██".to_string(),
+            Tile::Water => "\x1b[38;5;21m██\x1b[0m".to_string(),
+            Tile::Dirt => "\x1b[38;5;94m██\x1b[0m".to_string(),
+            Tile::Grass => "\x1b[38;5;28m██\x1b[0m".to_string(),
         }
     }
 }
