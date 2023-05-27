@@ -38,6 +38,16 @@ impl<T: PossibleValues, const D: usize> Grid<T, D> {
         self.size
     }
 
+    /// Returns an immutable reference to the inner microNDArray
+    pub fn as_inner(&self) -> &Array<Pixel<T>, D> {
+        &self.data
+    }
+
+    /// Returns an mutable reference to the inner microNDArray
+    pub fn as_mut_inner(&mut self) -> &mut Array<Pixel<T>, D> {
+        &mut self.data
+    }
+
     /// Clones and returns a Pixel from the Grid.
     pub fn get_item(&self, location: [usize; D]) -> Pixel<T> {
         self.data[location].clone()
